@@ -1,9 +1,12 @@
 import io
 import os
+import uuid
 from PIL import Image
 
 from PIL import ImageDraw
 from flask import send_file
+
+from flask import Flask, request, jsonify, render_template, send_file, url_for
 
 import torch
 import torchvision
@@ -34,18 +37,97 @@ def detect_objects(image_bytes):
 
     # COCO instance category names
     coco_instance_category_names = [
-        '__background__', 'person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus',
-        'train', 'truck', 'boat', 'traffic light', 'fire hydrant', 'N/A', 'stop sign',
-        'parking meter', 'bench', 'bird', 'cat', 'dog', 'horse', 'sheep', 'cow',
-        'elephant', 'bear', 'zebra', 'giraffe', 'N/A', 'backpack', 'umbrella', 'N/A', 'N/A',
-        'handbag', 'tie', 'suitcase', 'frisbee', 'skis', 'snowboard', 'sports ball',
-        'kite', 'baseball bat', 'baseball glove', 'skateboard', 'surfboard', 'tennis racket',
-        'bottle', 'N/A', 'wine glass', 'cup', 'fork', 'knife', 'spoon', 'bowl',
-        'banana', 'apple', 'sandwich', 'orange', 'broccoli', 'carrot', 'hot dog', 'pizza',
-        'donut', 'cake', 'chair', 'couch', 'potted plant', 'bed', 'N/A', 'dining table',
-        'N/A', 'N/A', 'toilet', 'N/A', 'tv', 'laptop', 'mouse', 'remote', 'keyboard', 'cell phone',
-        'microwave', 'oven', 'toaster', 'sink', 'refrigerator', 'N/A', 'book',
-        'clock', 'vase', 'scissors', 'teddy bear', 'hair drier', 'toothbrush'
+        "__background__",
+        "person",
+        "bicycle",
+        "car",
+        "motorcycle",
+        "airplane",
+        "bus",
+        "train",
+        "truck",
+        "boat",
+        "traffic light",
+        "fire hydrant",
+        "N/A",
+        "stop sign",
+        "parking meter",
+        "bench",
+        "bird",
+        "cat",
+        "dog",
+        "horse",
+        "sheep",
+        "cow",
+        "elephant",
+        "bear",
+        "zebra",
+        "giraffe",
+        "N/A",
+        "backpack",
+        "umbrella",
+        "N/A",
+        "N/A",
+        "handbag",
+        "tie",
+        "suitcase",
+        "frisbee",
+        "skis",
+        "snowboard",
+        "sports ball",
+        "kite",
+        "baseball bat",
+        "baseball glove",
+        "skateboard",
+        "surfboard",
+        "tennis racket",
+        "bottle",
+        "N/A",
+        "wine glass",
+        "cup",
+        "fork",
+        "knife",
+        "spoon",
+        "bowl",
+        "banana",
+        "apple",
+        "sandwich",
+        "orange",
+        "broccoli",
+        "carrot",
+        "hot dog",
+        "pizza",
+        "donut",
+        "cake",
+        "chair",
+        "couch",
+        "potted plant",
+        "bed",
+        "N/A",
+        "dining table",
+        "N/A",
+        "N/A",
+        "toilet",
+        "N/A",
+        "tv",
+        "laptop",
+        "mouse",
+        "remote",
+        "keyboard",
+        "cell phone",
+        "microwave",
+        "oven",
+        "toaster",
+        "sink",
+        "refrigerator",
+        "N/A",
+        "book",
+        "clock",
+        "vase",
+        "scissors",
+        "teddy bear",
+        "hair drier",
+        "toothbrush",
     ]
 
     # Draw bounding boxes and labels on the image
@@ -57,7 +139,6 @@ def detect_objects(image_bytes):
             draw.text((box[0], box[1]), name, fill="red")
 
     return image
-
 
 
 @app.route("/", methods=["GET"])
@@ -74,12 +155,18 @@ def upload_image():
     img_bytes = file.read()
     image_with_boxes = detect_objects(img_bytes)
 
-    # Save the image with bounding boxes to a buffer
-    buffer = io.BytesIO()
-    image_with_boxes.save(buffer, format="JPEG")
-    buffer.seek(0)
+    # Generate a unique filename for the processed image
+    filename = f"{uuid.uuid4().hex}.jpg"
 
-    return send_file(buffer, mimetype="image/jpeg")
+    # Save the image with bounding boxes to the server
+    image_with_boxes.save(os.path.join("static", filename), format="JPEG")
+
+    return jsonify(image_url=url_for("static", filename=filename))
+
+
+@app.route("/result/<path:image_url>", methods=["GET"])
+def result(image_url):
+    return render_template("result.html", image_url=image_url)
 
 
 if __name__ == "__main__":

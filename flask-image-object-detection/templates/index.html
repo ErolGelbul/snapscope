@@ -1,12 +1,38 @@
 <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-    <meta http-equiv="Pragma" content="no-cache" />
-    <meta http-equiv="Expires" content="0" />
     <title>Image Object Detection</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        function displayResult(data) {
+            $("body").html(data);
+        }
+
+        $(document).ready(function () {
+            $("form").submit(function (event) {
+                event.preventDefault();
+                var formData = new FormData(this);
+                $.ajax({
+                    url: "/detect",
+                    type: "POST",
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function (data) {
+                        $.get(data.image_url, function () {
+                            $.get("/result/" + data.image_url, displayResult);
+                        });
+                    },
+                    error: function (jqXHR, textStatus, errorThrown) {
+                        console.error("Error: " + textStatus, errorThrown);
+                    },
+                });
+            });
+        });
+    </script>
 </head>
 <body>
     <h1>Image Object Detection</h1>
@@ -16,4 +42,5 @@
     </form>
 </body>
 </html>
+
 
