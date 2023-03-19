@@ -1,19 +1,14 @@
 import io
 import os
 import uuid
+
 from PIL import Image
+from PIL import ImageDraw, ImageFont
 
-from PIL import ImageDraw
-from flask import send_file
+from flask import Flask, request, jsonify, render_template, url_for
 
-from flask import Flask, request, jsonify, render_template, send_file, url_for
-
-import torch
-import torchvision
 import torchvision.transforms as transforms
 from torchvision import models
-from flask import Flask, request, jsonify, render_template
-from pycocotools.coco import COCO
 
 app = Flask(__name__)
 model = models.detection.fasterrcnn_resnet50_fpn(pretrained=True)
@@ -49,6 +44,7 @@ def detect_objects(image_bytes):
         "boat",
         "traffic light",
         "fire hydrant",
+        "N/A",
         "stop sign",
         "parking meter",
         "bench",
@@ -65,6 +61,8 @@ def detect_objects(image_bytes):
         "N/A",
         "backpack",
         "umbrella",
+        "N/A",
+        "N/A",
         "handbag",
         "tie",
         "suitcase",
@@ -79,6 +77,7 @@ def detect_objects(image_bytes):
         "surfboard",
         "tennis racket",
         "bottle",
+        "N/A",
         "wine glass",
         "cup",
         "fork",
@@ -99,10 +98,12 @@ def detect_objects(image_bytes):
         "couch",
         "potted plant",
         "bed",
+        "N/A",
         "dining table",
         "N/A",
         "N/A",
         "toilet",
+        "N/A",
         "tv",
         "laptop",
         "mouse",
@@ -114,6 +115,7 @@ def detect_objects(image_bytes):
         "toaster",
         "sink",
         "refrigerator",
+        "N/A",
         "book",
         "clock",
         "vase",
@@ -125,11 +127,16 @@ def detect_objects(image_bytes):
 
     # Draw bounding boxes and labels on the image
     draw = ImageDraw.Draw(image)
+
+    # Specify the font size for the object names
+    font_size = 20
+    font = ImageFont.truetype("arial.ttf", font_size)
+
     for label, box, score in zip(labels, boxes, scores):
         if score > 0.5:  # You can adjust the threshold
             name = coco_instance_category_names[label]
             draw.rectangle(box, outline="red", width=2)
-            draw.text((box[0], box[1]), name, fill="red")
+            draw.text((box[0], box[1]), name, fill="red", font=font)
 
     return image
 
